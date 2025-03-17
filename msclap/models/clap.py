@@ -110,7 +110,7 @@ class CLAP(nn.Module):
         )
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07)) # 2.659
 
-    def forward(self, audios:torch.Tensor, texts:List):
+    def forward(self, audios:torch.Tensor, texts:torch.Tensor):
         audio_embed, _ = self.audio_encoder(audios)
         caption_embed = self.caption_encoder(texts)
 
@@ -131,7 +131,7 @@ class CLAP(nn.Module):
         loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
         return loss.mean()
 
-        return caption_embed, audio_embed, self.logit_scale.exp()
+        # return caption_embed, audio_embed, self.logit_scale.exp()
 
 def cross_entropy(preds, targets, reduction='none'):
     log_softmax = nn.LogSoftmax(dim=-1)
@@ -143,26 +143,21 @@ def cross_entropy(preds, targets, reduction='none'):
 
 
 if __name__ == '__main__':
-    audios = torch.randn(4,600) # waveform (batch_size, audio_len)
-    texts = torch.randint(5, 300, size=(4, 25))
-    attention_mask = torch.ones(8, 25)
-    batch = {
-        'audio': audios,
-        'texts': texts,
+    batch_size = 4
+    text_len = 25
+    audio_len = 600
+    
+    audios = torch.randn(batch_size,audio_len) # waveform (batch_size, audio_len)
+    texts = torch.randint(1, 300, size=(batch_size, text_len))
+    attention_mask = torch.ones(batch_size, text_len)
+    text_batch = {
+        'input_ids': texts,
+        'attention_mask': attention_mask,
     }
     
-    # images = torch.randn(8, 3, 224, 224)
-    # input_ids = torch.randint(5, 300, size=(8, 25))
-    # attention_mask = torch.ones(8, 25)
-    # batch = {
-    #     'image': images,
-    #     'input_ids': input_ids,
-        # 'attention_mask': attention_mask
-    # }
-
     clap = CLAP()
     audio_embeds, _ = clap.audio_encoder(audios)
-    text_embeds = clap.text_encoder(texts)
+    text_embeds = clap.text_encoder(text_batch)
     
-    loss = clap(batch)
+    loss = clap(audios, text_batch)
     print("")
