@@ -7,6 +7,16 @@
 **Github**
 - https://github.com/microsoft/CLAP
 
+## Setup
+First, install python 3.8 or higher (3.11 recommended). Then, install CLAP using either of the following:
+
+```
+# Install pypi pacakge
+pip install msclap
+
+# Or Install latest (unstable) git source
+pip install git+https://github.com/microsoft/CLAP.git
+```
 
 ## Reference
 clip-train
