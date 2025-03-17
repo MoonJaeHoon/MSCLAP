@@ -10,8 +10,10 @@
 
 ## Reference
 clip-train
-- https://github.com/openai/CLIP/tree/main/clip
+- https://github.com/moein-shariatnia/OpenAI-CLIP/blob/master/CLIP.py
 
+clip-official
+- https://github.com/openai/CLIP/tree/main/clip
 
 fp16 (mixed-precision)
 - https://github.com/openai/CLIP/blob/dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1/clip/model.py#L375

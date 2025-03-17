@@ -108,27 +108,25 @@ class CLAP(nn.Module):
         self.caption_encoder = TextEncoder(
             d_proj, text_model, transformer_embed_dim
         )
-        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07)) # 2.659
+        
+        self.temperature = 1.0
+        # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07)) # 2.659
+        # self.logit_scale = self.logit_scale.exp()
 
-    def forward(self, audios:torch.Tensor, texts:torch.Tensor):
-        audio_embed, _ = self.audio_encoder(audios)
-        caption_embed = self.caption_encoder(texts)
-
-
-        # Getting Image and Text Embeddings (with same dimension)
-        image_embeddings = self.image_projection(audio_embed)
-        text_embeddings = self.text_projection(caption_embed)
+    def forward(self, audios:torch.Tensor, texts:torch.Tensor): 
+        audio_embed, _ = self.audio_encoder(audios) # image_embeddings
+        caption_embed = self.caption_encoder(texts) # text_embeddings
 
         # Calculating the Loss
-        logits = (text_embeddings @ image_embeddings.T) / self.temperature
-        images_similarity = image_embeddings @ image_embeddings.T
-        texts_similarity = text_embeddings @ text_embeddings.T
+        logits = (caption_embed @ audio_embed.T) / self.temperature
+        audios_similarity = audio_embed @ audio_embed.T
+        texts_similarity = caption_embed @ caption_embed.T
         targets = F.softmax(
-            (images_similarity + texts_similarity) / 2 * self.temperature, dim=-1
+            (audios_similarity + texts_similarity) / 2 * self.temperature, dim=-1
         )
         texts_loss = cross_entropy(logits, targets, reduction='none')
-        images_loss = cross_entropy(logits.T, targets.T, reduction='none')
-        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        audios_loss = cross_entropy(logits.T, targets.T, reduction='none')
+        loss =  (audios_loss + texts_loss) / 2.0 # shape: (batch_size)
         return loss.mean()
 
         # return caption_embed, audio_embed, self.logit_scale.exp()
