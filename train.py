@@ -6,28 +6,30 @@ from tqdm import tqdm
 
 import torch
 from torch import nn
-from transformers import DistilBertTokenizer
+from transformers import AutoModel, AutoTokenizer
 
 import config as CFG
-from dataset import get_data_loader
+from dataset import get_data_loader, AudioCaptionDataset
 from CLIP import CLIPModel
 from utils import AvgMeter, get_lr
 
-def build_loaders(dataframe, tokenizer, mode):
-    transforms = get_transforms(mode=mode)
-    dataset = CLIPDataset(
-        dataframe["image"].values,
-        dataframe["caption"].values,
-        tokenizer=tokenizer,
-        transforms=transforms,
-    )
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=CFG.batch_size,
-        num_workers=CFG.num_workers,
-        shuffle=True if mode == "train" else False,
-    )
-    return dataloader
+
+
+# def build_loaders(dataframe, tokenizer, mode):
+#     transforms = get_transforms(mode=mode)
+#     dataset = AudioCaptionDataset(
+#         dataframe["audio"].values,
+#         dataframe["caption"].values,
+#         tokenizer=tokenizer,
+#         transforms=transforms,
+#     )
+#     dataloader = torch.utils.data.DataLoader(
+#         dataset,
+#         batch_size=CFG.batch_size,
+#         num_workers=CFG.num_workers,
+#         shuffle=True if mode == "train" else False,
+#     )
+#     return dataloader
 
 
 def train_epoch(model, train_loader, optimizer, lr_scheduler, step):
@@ -65,11 +67,9 @@ def valid_epoch(model, valid_loader):
 
 
 def main():
-    train_df, valid_df = make_train_valid_dfs()
-    tokenizer = DistilBertTokenizer.from_pretrained(CFG.text_tokenizer)
-    train_loader = build_loaders(train_df, tokenizer, mode="train")
-    valid_loader = build_loaders(valid_df, tokenizer, mode="valid")
 
+    train_loader = get_data_loader(CFG.train_path, CFG.max_duration, mode="train")
+    valid_loader = get_data_loader(CFG.valid_path, CFG.max_duration, mode="valid")
 
     model = CLIPModel().to(CFG.device)
     optimizer = torch.optim.AdamW(
@@ -80,7 +80,7 @@ def main():
     )
     step = "epoch"
 
-    best_loss = float('inf')
+    best_loss = float("inf")
     for epoch in range(CFG.epochs):
         print(f"Epoch: {epoch + 1}")
         model.train()
@@ -88,7 +88,7 @@ def main():
         model.eval()
         with torch.no_grad():
             valid_loss = valid_epoch(model, valid_loader)
-        
+
         if valid_loss.avg < best_loss:
             best_loss = valid_loss.avg
             torch.save(model.state_dict(), "best.pt")

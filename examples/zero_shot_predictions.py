@@ -1,22 +1,23 @@
 """
 This is an example using CLAP for zero-shot inference.
 """
+
 from msclap import CLAP
 import torch.nn.functional as F
 
 # Define classes for zero-shot
 # Should be in lower case and can be more than one word
-classes = ['coughing','sneezing','drinking sipping', 'breathing', 'brushing teeth']
-ground_truth = ['coughing']
+classes = ["coughing", "sneezing", "drinking sipping", "breathing", "brushing teeth"]
+ground_truth = ["coughing"]
 # Add prompt
-prompt = 'this is a sound of '
+prompt = "this is a sound of "
 class_prompts = [prompt + x for x in classes]
-#Load audio files
-audio_files = ['audio_file']
+# Load audio files
+audio_files = ["audio_file"]
 
 # Load and initialize CLAP
 # Setting use_cuda = True will load the model on a GPU using CUDA
-clap_model = CLAP(version = '2023', use_cuda=False)
+clap_model = CLAP(version="2023", use_cuda=False)
 
 # compute text embeddings from natural text
 text_embeddings = clap_model.get_text_embeddings(class_prompts)
